@@ -1,10 +1,10 @@
-#!/usr/bin/bash
+#!/usr/bin/env bash
 
 WATCHDIR="." # Path to local directory to watch for updates
 PEER=""      # Hostname of receiver
 PORT=""      # Receiever port
 
-USAGE="Usage: $(basename ${BASH_SOURCE[0]}) -d <dir to watch> -s <receiver hostname> -p <receiver port>
+USAGE="Usage: $(basename "${BASH_SOURCE[0]}") -d <dir to watch> -s <receiver hostname> -p <receiver port>
     Watches a directory (recursively) for incoming dicoms, and sends them to an SCP.
     Run storescp -sp -od <output directory> -aet <hostname> <port> on the receiver."
 
@@ -49,7 +49,7 @@ inotifywait -m -r -c -e create -e moved_to "$WATCHDIR" | while read -r line; do
     if [[ $(awk -F'.' '{print $NF}' <<< "$file") == "dcm" ]] ; then
         filepath="${WATCHDIR}/${file}"
         echo "${event} on ${file}, sending to ${PEER} on port ${PORT}"
-        dcmsend "$PEER" "$PORT" "$filepath" # & #&& rm -f "$filepath" # run in background to immediately wait again
+        dcmsend "$PEER" "$PORT" "$filepath"
         if [[ $# -eq 0 ]] ; then
             rm -f "$filepath"
         else 
@@ -57,7 +57,3 @@ inotifywait -m -r -c -e create -e moved_to "$WATCHDIR" | while read -r line; do
         fi
     fi
 done
-if [[ $0 -eq 2 ]] ; then
-    echo "Error while watching for updates" >&2
-    exit 1
-fi
