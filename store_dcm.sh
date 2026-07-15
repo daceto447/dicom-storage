@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 
-if [[ "$#" -lt 2 ]] ; then
+# Wrapper for storescp.
+# adds -sp flag (output into directory for patient),
+# sets AET to this hostname.
+# Takes in as positional arguments the output directory, other options, and the listen port.
+
+if [[ $# -lt 2 ]] ; then
     echo "Usage: $(basename "${BASH_SOURCE[0]}") <output-directory> <args> <port>" >&2
     exit 1
 fi

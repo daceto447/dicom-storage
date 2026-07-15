@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 
+# Watches a directory (recursively) for incoming dicoms, and sends them to an SCP.
+# Run ./store_dcm <output_dir> <port> on the receiver."
+
 WATCHDIR="." # Path to local directory to watch for updates
 PEER=""      # Hostname of receiver
 PORT=""      # Receiever port
 
-USAGE="Usage: $(basename "${BASH_SOURCE[0]}") -d <dir to watch> -s <receiver hostname> -p <receiver port>
-    Watches a directory (recursively) for incoming dicoms, and sends them to an SCP.
-    Run storescp -sp -od <output directory> -aet <hostname> <port> on the receiver."
+USAGE="Usage: $(basename "${BASH_SOURCE[0]}") -d <dir to watch> -s <receiver hostname> -p <receiver port>"
 
 NUM_ARGS=6
 if [[ $# -lt NUM_ARGS ]] ; then
