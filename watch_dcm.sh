@@ -1,0 +1,63 @@
+#!/usr/bin/bash
+
+WATCHDIR="." # Path to local directory to watch for updates
+PEER=""      # Hostname of receiver
+PORT=""      # Receiever port
+
+USAGE="Usage: $(basename ${BASH_SOURCE[0]}) -d <dir to watch> -s <receiver hostname> -p <receiver port>
+    Watches a directory (recursively) for incoming dicoms, and sends them to an SCP.
+    Run storescp -sp -od <output directory> -aet <hostname> <port> on the receiver."
+
+NUM_ARGS=6
+if [[ $# -lt NUM_ARGS ]] ; then
+    echo "$USAGE" >&2
+    exit 1
+fi
+
+while [[ $# -gt 0 ]] ; do
+    case "$1" in
+        "-h")
+            echo "$USAGE" >&2
+            exit
+            ;;
+        "-d")
+            WATCHDIR="$2"
+            shift 2
+            ;;
+        "-p")
+            PORT="$2"
+            shift 2
+            ;;
+        "-s")
+            PEER="$2"
+            shift 2
+            ;;
+        *)
+            shift
+            ;;
+    esac
+done
+
+# In loop, wait for .dcms in DIR and send them to receiver
+# -r: recursively checks dirs
+# -c: Outputted as csv (for splitting)
+# -e: Listens only for files created in, moved to the dir
+inotifywait -m -r -c -e create -e moved_to "$WATCHDIR" | while read -r line; do
+    event=$(awk -F',' '{print $2}' <<< "$line")
+    file=$(awk -F',' '{print $3}' <<< "$line")
+    # if .dcm, dcmsend it and delete original file
+    if [[ $(awk -F'.' '{print $NF}' <<< "$file") == "dcm" ]] ; then
+        filepath="${WATCHDIR}/${file}"
+        echo "${event} on ${file}, sending to ${PEER} on port ${PORT}"
+        dcmsend "$PEER" "$PORT" "$filepath" # & #&& rm -f "$filepath" # run in background to immediately wait again
+        if [[ $# -eq 0 ]] ; then
+            rm -f "$filepath"
+        else 
+            echo "Error sending file ${file}" >&2
+        fi
+    fi
+done
+if [[ $0 -eq 2 ]] ; then
+    echo "Error while watching for updates" >&2
+    exit 1
+fi
